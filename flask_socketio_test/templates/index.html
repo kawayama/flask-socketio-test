@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body>
+    <div id="inputArea">
+        <label for="roomID">RoomID:</label>
+        <input type="text" id="roomId"><br/>
+        <label for="username">Username:</label>
+        <input type="text" id="username"><br/>
+        <button id="sendButton">Send</button>
+    </div>
+
+    <span id="notification"></span>
+
+    <script>
+        var socket = io.connect('http://localhost:5000');
+
+        // 接続時のイベント
+        socket.on('connect', () => {
+            console.log('Connected');
+        });
+
+        // 切断時のイベント
+        socket.on('disconnect', () => {
+            console.log('Disconnected');
+            window.alert('接続が切れました');
+            location.reload();
+        });
+
+        // ボタンクリック時のイベント
+        $('#sendButton').click(() => {
+            const roomIDInput = $('#roomId')
+            const usernameInput = $('#username')
+
+            const roomID = roomIDInput.val();
+            const username = usernameInput.val();
+
+            socket.emit('enter_room', {
+                roomID: roomID,
+                username: username
+            });
+
+            roomIDInput.val('');
+            usernameInput.val('');
+            $('#inputArea').hide();
+
+            $('#notification').text('他のユーザを待っています...')
+        });
+
+        socket.on('start_game', (data) => {
+            console.log(data);
+            user_names = data.user_names;
+            console.log('start_game');
+            $('#notification').text('ゲームを開始します...\n参加ユーザー: ' + user_names.join(', '));
+        });
+
+        socket.on('error', (data) => {
+            console.log(data);
+            error = data.error;
+            window.alert(error);
+            location.reload();
+        });
+    </script>
+</body>
+</html>
